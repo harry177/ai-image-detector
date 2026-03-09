@@ -12,3 +12,8 @@ python-service/.cache/
 web/node_modules/
 web/.next/
 web/.env
+
+# Node.js
+node-service/result.csv
+node-service/.env
+node-service/node_modules/

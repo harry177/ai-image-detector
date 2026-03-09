@@ -12,4 +12,6 @@ class DetectionResponse(BaseModel):
     results: List[DetectionResultItem]
     topLabel: Optional[str] = None
     topScore: Optional[float] = None
+    aiScore: Optional[float] = None
+    realScore: Optional[float] = None
     error: Optional[str] = None

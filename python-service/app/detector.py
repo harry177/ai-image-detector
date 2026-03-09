@@ -1,6 +1,6 @@
 from transformers import pipeline
 from PIL import Image
-from typing import BinaryIO
+from typing import BinaryIO, Optional
 
 MODEL_ID = "Organika/sdxl-detector"
 
@@ -30,7 +30,7 @@ def detect_image(file_obj: BinaryIO):
     normalized = sorted(
         [
             {
-                "label": item["label"],
+                "label": str(item["label"]),
                 "score": float(item["score"]),
             }
             for item in result
@@ -40,3 +40,51 @@ def detect_image(file_obj: BinaryIO):
     )
 
     return normalized
+
+
+def find_score_by_label(results, keywords) -> Optional[float]:
+    for item in results:
+        label = item["label"].strip().lower()
+        if any(keyword == label or keyword in label for keyword in keywords):
+            return float(item["score"])
+    return None
+
+
+def extract_scores(results):
+    if not results:
+        return None, None
+
+    ai_score = find_score_by_label(
+        results,
+        [
+            "artificial",
+            "ai-generated",
+            "ai generated",
+            "generated",
+            "synthetic",
+            "fake",
+            "ai",
+            "sdxl",
+        ]
+    )
+
+    real_score = find_score_by_label(
+        results,
+        [
+            "human",
+            "real",
+            "photo",
+            "photograph",
+            "natural",
+            "non-sdxl",
+            "not ai",
+        ]
+    )
+
+    if ai_score is None and real_score is not None:
+        ai_score = 1.0 - real_score
+
+    if real_score is None and ai_score is not None:
+        real_score = 1.0 - ai_score
+
+    return ai_score, real_score
