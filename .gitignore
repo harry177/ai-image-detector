@@ -1,0 +1,9 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+python-service/.venv/
+python-service/__pycache__/
+python-service/**/*.pyc
+python-service/.cache/
