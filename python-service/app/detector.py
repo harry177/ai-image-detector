@@ -2,7 +2,7 @@ from transformers import pipeline
 from PIL import Image
 from typing import BinaryIO
 
-MODEL_ID = "umm-maybe/AI-image-detector"
+MODEL_ID = "Organika/sdxl-detector"
 
 _detector = None
 
