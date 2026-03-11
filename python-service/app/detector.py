@@ -2,7 +2,9 @@ from transformers import pipeline
 from PIL import Image
 from typing import BinaryIO, Optional
 
-MODEL_ID = "Organika/sdxl-detector"
+# change model here:
+# MODEL_ID = "Organika/sdxl-detector"
+MODEL_ID = "umm-maybe/AI-image-detector"
 
 _detector = None
 
@@ -11,7 +13,7 @@ def get_detector():
     global _detector
 
     if _detector is None:
-        print("Loading detector model...")
+        print(f"Loading detector model: {MODEL_ID}")
         _detector = pipeline(
             "image-classification",
             model=MODEL_ID
@@ -50,36 +52,96 @@ def find_score_by_label(results, keywords) -> Optional[float]:
     return None
 
 
+def get_model_type() -> str:
+    model_id = MODEL_ID.strip().lower()
+
+    if model_id == "organika/sdxl-detector":
+        return "organika_sdxl"
+
+    if model_id == "umm-maybe/ai-image-detector":
+        return "umm_maybe"
+
+    return "generic"
+
+
 def extract_scores(results):
     if not results:
         return None, None
 
-    ai_score = find_score_by_label(
-        results,
-        [
-            "artificial",
-            "ai-generated",
-            "ai generated",
-            "generated",
-            "synthetic",
-            "fake",
-            "ai",
-            "sdxl",
-        ]
-    )
+    model_type = get_model_type()
 
-    real_score = find_score_by_label(
-        results,
-        [
-            "human",
-            "real",
-            "photo",
-            "photograph",
-            "natural",
-            "non-sdxl",
-            "not ai",
-        ]
-    )
+    ai_score = None
+    real_score = None
+
+    if model_type == "organika_sdxl":
+        ai_score = find_score_by_label(
+            results,
+            [
+                "artificial",
+            ]
+        )
+
+        real_score = find_score_by_label(
+            results,
+            [
+                "human",
+            ]
+        )
+
+    elif model_type == "umm_maybe":
+        ai_score = find_score_by_label(
+            results,
+            [
+                "ai-generated",
+                "ai generated",
+                "generated",
+                "synthetic",
+                "fake",
+                "artificial",
+                "ai",
+            ]
+        )
+
+        real_score = find_score_by_label(
+            results,
+            [
+                "real",
+                "photo",
+                "photograph",
+                "natural",
+                "human",
+                "not ai",
+            ]
+        )
+
+    else:
+        # fallback
+        ai_score = find_score_by_label(
+            results,
+            [
+                "artificial",
+                "ai-generated",
+                "ai generated",
+                "generated",
+                "synthetic",
+                "fake",
+                "ai",
+                "sdxl",
+            ]
+        )
+
+        real_score = find_score_by_label(
+            results,
+            [
+                "human",
+                "real",
+                "photo",
+                "photograph",
+                "natural",
+                "non-sdxl",
+                "not ai",
+            ]
+        )
 
     if ai_score is None and real_score is not None:
         ai_score = 1.0 - real_score
